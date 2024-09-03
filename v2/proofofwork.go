@@ -1,6 +1,11 @@
 package main
 
-import "math/big"
+import (
+	"bytes"
+	"crypto/sha256"
+	"fmt"
+	"math/big"
+)
 
 // 定义工作量证明结构
 type ProofOfWork struct {
@@ -16,8 +21,10 @@ func NewProofOfWork(block *Block) *ProofOfWork {
 		block: block,
 	}
 
-	targetStr := "000010000000000000000000000000000000000000000000000000000000000000000"
+	//制定难度值
+	targetStr := "001000000000000000000000000000000000000000000000000000000000000"
 	tmpInt := big.Int{}
+	//将难度值转化为big.int
 	tmpInt.SetString(targetStr, 16)
 
 	pow.target = &tmpInt
@@ -25,7 +32,40 @@ func NewProofOfWork(block *Block) *ProofOfWork {
 }
 
 // 提供不断计算hash的函数
-func (pow *ProofOfWork) Run() ([]byte, uint) {
-	//todo
-	return []byte{}, 0
+func (pow *ProofOfWork) Run() ([]byte, uint64) {
+	var nonce uint64
+	block := pow.block
+	var hash [32]byte
+
+	for {
+		//拼数据
+		tmp := [][]byte{
+			uint64ToByte(block.Version),
+			block.PrevHash,
+			block.MerkelRoot,
+			uint64ToByte(block.TimeStamp),
+			uint64ToByte(block.Difficulty),
+			uint64ToByte(nonce),
+			block.Data,
+		}
+		blockInfo := bytes.Join(tmp, []byte{})
+
+		//哈希运算
+		hash = sha256.Sum256(blockInfo)
+
+		//与pow中的target进行比较
+		tmpInt := big.Int{}
+		//将计算的哈希转化为bigInt
+		tmpInt.SetBytes(hash[:])
+
+		//bigInt比较
+		if tmpInt.Cmp(pow.target) == -1 {
+			fmt.Printf("挖矿成功！hash:%x,nonce:%d\n", hash, nonce)
+			//break
+			return hash[:], nonce
+		} else {
+			nonce++
+		}
+	}
+
 }

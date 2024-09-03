@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"crypto/sha256"
 	"encoding/binary"
 	"log"
 	"time"
@@ -46,28 +45,35 @@ func NewBlock(data string, prevBlockHash []byte) *Block {
 		prevBlockHash,
 		[]byte{},
 		uint64(time.Now().Unix()),
-		0,
+		3,
 		0,
 		[]byte{},
 		[]byte(data),
 	}
 
-	block.SetHash()
+	//block.SetHash()
+	//创建一个pow对象
+	pow := NewProofOfWork(&block)
+	//不停进行哈希运算
+	hash, nonce := pow.Run()
+	//根据挖矿结果对区块进行更新
+	block.Hash = hash
+	block.Nonce = nonce
 
 	return &block
 }
 
 // 生成哈希
-func (block *Block) SetHash() {
+/*func (block *Block) SetHash() {
 	var blockInfo []byte
 	//拼装数据
-	/*blockInfo = append(blockInfo, uint64ToByte(block.Version)...)
-	blockInfo = append(blockInfo, block.PrevHash...)
-	blockInfo = append(blockInfo, block.MerkelRoot...)
-	blockInfo = append(blockInfo, uint64ToByte(block.TimeStamp)...)
-	blockInfo = append(blockInfo, uint64ToByte(block.Difficulty)...)
-	blockInfo = append(blockInfo, uint64ToByte(block.Nonce)...)
-	blockInfo = append(blockInfo, block.Data...)*/
+	//blockInfo = append(blockInfo, uint64ToByte(block.Version)...)
+	//blockInfo = append(blockInfo, block.PrevHash...)
+	//blockInfo = append(blockInfo, block.MerkelRoot...)
+	//blockInfo = append(blockInfo, uint64ToByte(block.TimeStamp)...)
+	//blockInfo = append(blockInfo, uint64ToByte(block.Difficulty)...)
+	//blockInfo = append(blockInfo, uint64ToByte(block.Nonce)...)
+	//blockInfo = append(blockInfo, block.Data...)
 	tmp := [][]byte{
 		uint64ToByte(block.Version),
 		block.PrevHash,
@@ -84,4 +90,4 @@ func (block *Block) SetHash() {
 	//sha256
 	hash := sha256.Sum256(blockInfo)
 	block.Hash = hash[:]
-}
+}*/
