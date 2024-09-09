@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/binary"
 	"encoding/gob"
 	"log"
@@ -26,7 +27,9 @@ type Block struct {
 	//a.当前hash(正常比特币区块中没有当前哈希，此处简化了)
 	Hash []byte
 	//b.数据
-	Data []byte
+	//Data []byte
+	//b.真实交易数据
+	Transactions []*Transaction
 }
 
 // 辅助函数，将uint64转换为[]byte
@@ -40,7 +43,7 @@ func uint64ToByte(num uint64) []byte {
 }
 
 // 创建区块
-func NewBlock(data string, prevBlockHash []byte) *Block {
+func NewBlock(txs []*Transaction, prevBlockHash []byte) *Block {
 	block := Block{
 		00,
 		prevBlockHash,
@@ -49,8 +52,11 @@ func NewBlock(data string, prevBlockHash []byte) *Block {
 		3,
 		0,
 		[]byte{},
-		[]byte(data),
+		//[]byte(data),
+		txs,
 	}
+
+	block.MerkelRoot = block.MakeMerkelRoot()
 
 	//block.SetHash()
 	//创建一个pow对象
@@ -64,7 +70,7 @@ func NewBlock(data string, prevBlockHash []byte) *Block {
 	return &block
 }
 
-//序列化
+// 序列化
 func (block *Block) Serialize() []byte {
 	var buffer bytes.Buffer
 
@@ -80,7 +86,7 @@ func (block *Block) Serialize() []byte {
 	return buffer.Bytes()
 }
 
-//反序列化
+// 反序列化
 func Deserialze(data []byte) Block {
 	var block Block
 
@@ -92,31 +98,13 @@ func Deserialze(data []byte) Block {
 	return block
 }
 
-// 生成哈希
-/*func (block *Block) SetHash() {
-	var blockInfo []byte
-	//拼装数据
-	//blockInfo = append(blockInfo, uint64ToByte(block.Version)...)
-	//blockInfo = append(blockInfo, block.PrevHash...)
-	//blockInfo = append(blockInfo, block.MerkelRoot...)
-	//blockInfo = append(blockInfo, uint64ToByte(block.TimeStamp)...)
-	//blockInfo = append(blockInfo, uint64ToByte(block.Difficulty)...)
-	//blockInfo = append(blockInfo, uint64ToByte(block.Nonce)...)
-	//blockInfo = append(blockInfo, block.Data...)
-	tmp := [][]byte{
-		uint64ToByte(block.Version),
-		block.PrevHash,
-		block.MerkelRoot,
-		uint64ToByte(block.TimeStamp),
-		uint64ToByte(block.Difficulty),
-		uint64ToByte(block.Nonce),
-		block.Data,
+// 模拟默克尔根生成，只对交易数据做简单的拼接，不做二叉树处理
+func (block *Block) MakeMerkelRoot() []byte {
+	var info []byte
+	//将交易的哈希值拼接起来，整体再次哈希
+	for _, tx := range block.Transactions {
+		info = append(info, tx.TXID...)
 	}
-
-	//将二维数组切片连接起来，返回一个一维切片
-	blockInfo = bytes.Join(tmp, []byte{})
-
-	//sha256
-	hash := sha256.Sum256(blockInfo)
-	block.Hash = hash[:]
-}*/
+	hash := sha256.Sum256(info)
+	return hash[:]
+}

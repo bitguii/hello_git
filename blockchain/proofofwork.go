@@ -22,7 +22,7 @@ func NewProofOfWork(block *Block) *ProofOfWork {
 	}
 
 	//制定难度值
-	targetStr := "001000000000000000000000000000000000000000000000000000000000000"
+	targetStr := "000100000000000000000000000000000000000000000000000000000000000"
 	tmpInt := big.Int{}
 	//将难度值转化为big.int
 	tmpInt.SetString(targetStr, 16)
@@ -37,6 +37,7 @@ func (pow *ProofOfWork) Run() ([]byte, uint64) {
 	block := pow.block
 	var hash [32]byte
 
+	fmt.Println("开始挖矿...")
 	for {
 		//拼数据
 		tmp := [][]byte{
@@ -46,7 +47,8 @@ func (pow *ProofOfWork) Run() ([]byte, uint64) {
 			uint64ToByte(block.TimeStamp),
 			uint64ToByte(block.Difficulty),
 			uint64ToByte(nonce),
-			block.Data,
+			//只对区块头做哈希，区块体通过默克尔根产生影响
+			//block.Data,
 		}
 		blockInfo := bytes.Join(tmp, []byte{})
 
