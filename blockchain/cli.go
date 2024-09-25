@@ -16,6 +16,8 @@ const Usage = `
 	printChainR              		'print all blockchain data Reverse'
 	getBalance -address ADDRESS		'get the balance all UXTO'
 	send FROM TO AMOUNT MINER DATA  "transfer amount from 'from' to 'to',mine by "miner",and write data at the same time"
+	newWallet						'create a new wallet(privatekey and publickey)'
+	listAddresses					'list all addresses'
 `
 
 // 接受参数的动作
@@ -54,6 +56,12 @@ func (cli *CLI) Run() {
 		miner := args[5]
 		data := args[6]
 		cli.Send(from, to, amount, miner, data)
+	case "newWallet":
+		fmt.Println("创建新的钱包")
+		cli.NewWallet()
+	case "listAddresses":
+		fmt.Println("列举所有钱包地址")
+		cli.ListAddresses()
 	default:
 		fmt.Println("无效的命令，请检查")
 		fmt.Println(Usage)

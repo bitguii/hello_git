@@ -23,7 +23,7 @@ func (cli *CLI) printBlockChain() {
 		fmt.Printf("难度值（随便写的）：%d\n", block.Difficulty)
 		fmt.Printf("随机数：%d\n", block.Nonce)
 		fmt.Printf("当前区块哈希：%x\n", block.Hash)
-		fmt.Printf("区块数据：%s\n", block.Transactions[0].TXINPUT[0].Sig)
+		fmt.Printf("区块数据：%s\n", block.Transactions[0].TXINPUT[0].PubKey)
 
 		if len(block.PrevHash) == 0 {
 			fmt.Println("区块链遍历结束！")
@@ -53,7 +53,7 @@ func (cli *CLI) PrintBlockChainReverse() {
 		fmt.Printf("难度值（随便写的）：%d\n", block.Difficulty)
 		fmt.Printf("随机数：%d\n", block.Nonce)
 		fmt.Printf("当前区块哈希：%x\n", block.Hash)
-		fmt.Printf("区块数据：%s\n", block.Transactions[0].TXINPUT[0].Sig)
+		fmt.Printf("区块数据：%s\n", block.Transactions[0].TXINPUT[0].PubKey)
 
 		if len(block.PrevHash) == 0 {
 			fmt.Println("区块链遍历结束！")
@@ -64,7 +64,16 @@ func (cli *CLI) PrintBlockChainReverse() {
 
 // 获取指定地址钱包余额
 func (cli *CLI) GetBalance(address string) {
-	utxos := cli.bc.FindUTXOs(address)
+	//校验地址
+	if !IsValidAddress(address) {
+		fmt.Printf("地址无效:%s\n", address)
+		return
+	}
+
+	//生成公钥哈希
+	pubKeyHash := GetPubKeyFromAddress(address)
+
+	utxos := cli.bc.FindUTXOs(pubKeyHash)
 
 	total := 0.0
 	for _, utxo := range utxos {
@@ -74,6 +83,18 @@ func (cli *CLI) GetBalance(address string) {
 }
 
 func (cli *CLI) Send(from, to string, amount float64, miner, data string) {
+	if IsValidAddress(from) {
+		fmt.Printf("地址无效 from：%s\n", from)
+		return
+	}
+	if IsValidAddress(to) {
+		fmt.Printf("地址无效 to：%s\n", to)
+		return
+	}
+	if IsValidAddress(miner) {
+		fmt.Printf("地址无效 miner：%s\n", miner)
+		return
+	}
 	//1.创建挖矿交易
 	coinbase := NewCoinbaseTX(miner, data)
 	//2.创建普通交易
@@ -84,4 +105,21 @@ func (cli *CLI) Send(from, to string, amount float64, miner, data string) {
 	//3.将交易添加到区块中
 	cli.bc.AddBlock([]*Transaction{coinbase, tx})
 	fmt.Println("转账成功！")
+}
+
+func (cli *CLI) NewWallet() {
+	ws := NewWallets()
+	address := ws.CreateWallet()
+	fmt.Printf("地址：%s\n", address)
+	//for address := range ws.WalletsMap {
+	//	fmt.Printf("地址：%s\n", address)
+	//}
+}
+
+func (cli *CLI) ListAddresses() {
+	ws := NewWallets()
+	addresses := ws.ListAllAddress()
+	for _, address := range addresses {
+		fmt.Printf("地址：%s\n", address)
+	}
 }

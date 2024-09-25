@@ -1,9 +1,11 @@
 package main
 
 func main() {
-	bc := NewBlockChain("张三")
-	cli := CLI{bc}
+	cli := CLI{}
 	cli.Run()
+	//bc := NewBlockChain("张三")
+	//cli := CLI{bc}
+	//cli.Run()
 
 	//bc.AddBlock("1111111111111")
 	//bc.AddBlock("2222222222222")
